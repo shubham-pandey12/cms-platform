@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend\src\Cms.Domain\Cms.Domain.csproj" />
+    <Project Path="backend\src\Cms.Application\Cms.Application.csproj" />
+    <Project Path="backend\src\Cms.Persistence\Cms.Persistence.csproj" />
+    <Project Path="backend\src\Cms.Api\Cms.Api.csproj" />
+  </Folder>
+  <Folder Name="/backend/tests/">
+    <Project Path="backend\tests\Cms.Application.Tests\Cms.Application.Tests.csproj" />
+    <Project Path="backend\tests\Cms.Api.Tests\Cms.Api.Tests.csproj" />
+  </Folder>
+  <Folder Name="/orchestration/">
+    <Project Path="orchestration/Cms.AppHost/Cms.AppHost.csproj" />
+    <Project Path="orchestration/Cms.ServiceDefaults/Cms.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,11 @@
+# Frontend build context (compose uses context: . and Dockerfile --target frontend)
+
+node_modules
+.next
+.git
+*.md
+.env*
+coverage
+.cursor
+*.log
+README*

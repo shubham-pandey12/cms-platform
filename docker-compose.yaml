@@ -1,0 +1,110 @@
+# Development: full stack (PostgreSQL, API, frontend). Build from repo root.
+#
+# Use --env-file so variables are set (copy .env.example to .env.Development and set values).
+# Required in .env.Development: POSTGRES_PASSWORD (non-empty). Jwt__Key: set or leave unset to use default.
+#
+# Build:  docker compose -f docker-compose.yaml --env-file .env.Development build
+# Up:     docker compose -f docker-compose.yaml --env-file .env.Development up -d
+# Down:   docker compose -f docker-compose.yaml --env-file .env.Development down
+# docker compose -f docker-compose.yaml --env-file .env.Development up -d
+# docker compose -f docker-compose.yaml --env-file .env.Development build --no-cache frontend
+# docker compose -f docker-compose.yaml --env-file .env.Development up -d
+
+name: content-studio
+
+services:
+  postgres:
+    image: "docker.io/library/postgres:17"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "cmsdb"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cmsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - type: "volume"
+        target: "/var/lib/postgresql/data"
+        source: "cms-postgres-data"
+        read_only: false
+    networks:
+      - "cms"
+  cms-api:
+    image: "${CMS_API_IMAGE:-cms-api:latest}"
+    build:
+      context: .
+      dockerfile: backend/src/Cms.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__cmsdb: "Host=postgres;Port=5432;Username=postgres;Password=${POSTGRES_PASSWORD};Database=cmsdb"
+      Jwt__Key: "${Jwt__Key:-DevelopmentKeyMustBeAtLeast32CharactersLong!}"
+      Jwt__Issuer: "${Jwt__Issuer:-Cms}"
+      Jwt__Audience: "${Jwt__Audience:-CmsUsers}"
+      Jwt__ExpirationMinutes: "${Jwt__ExpirationMinutes:-60}"
+      # MOS Gateway (Sign in with MOS) – set in .env.Development; must match gateway client config
+      MosGateway__BaseUrl: "${MosGateway__BaseUrl:-}"
+      MosGateway__ClientId: "${MosGateway__ClientId:-}"
+      MosGateway__ClientSecret: "${MosGateway__ClientSecret:-your-secure-secret-min-16-chars}"
+      MosGateway__AllowedRedirectUris__0: "${MosGateway__AllowedRedirectUris__0:-http://localhost:3000/signin-callback}"
+      MosGateway__AllowedRedirectUris__1: "${MosGateway__AllowedRedirectUris__1:-https://localhost:3000/signin-callback}"
+      MosGateway__TimeoutSeconds: "${MosGateway__TimeoutSeconds:-60}"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    networks:
+      - "cms"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/dev/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  frontend:
+    image: "${FRONTEND_IMAGE:-cms-frontend:latest}"
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Browser calls API on host
+        NEXT_PUBLIC_API_BASE_URL: "${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080/api}"
+        # MOS Gateway for "Sign in with MOS" (UAT)
+        NEXT_PUBLIC_MOS_GATEWAY_URL: "${NEXT_PUBLIC_MOS_GATEWAY_URL:-}"
+        NEXT_PUBLIC_MOS_GATEWAY_CLIENT_ID: "${NEXT_PUBLIC_MOS_GATEWAY_CLIENT_ID:-}"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      API_BASE_URL: "http://cms-api:8080/api"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - cms-api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/dev/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - "cms"
+
+networks:
+  cms:
+    driver: "bridge"
+volumes:
+  cms-postgres-data:
+    external: true
+    name: content-studio-postgres-data

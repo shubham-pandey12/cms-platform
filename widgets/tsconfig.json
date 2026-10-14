@@ -1,0 +1,18 @@
+{
+  "extends": "../frontend/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../frontend",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./*"],
+      "react": ["../frontend/node_modules/react"],
+      "react-dom": ["../frontend/node_modules/react-dom"],
+      "sonner": ["../frontend/node_modules/sonner"],
+      "next": ["./node_modules/next"],
+      "next/navigation": ["./node_modules/next/navigation"],
+      "next/image": ["./node_modules/next/image"],
+      "lucide-react": ["./node_modules/lucide-react"]
+    }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}

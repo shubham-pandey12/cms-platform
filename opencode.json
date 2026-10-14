@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "bitfrost": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Cms Bitfrost",
+      "options": {
+        "baseURL": "https://example.com/api"
+      },
+      "models": {
+        "cms/coding": {
+          "name": "cms/coding",
+	        "tools": true
+        },
+        "cms/code-reasoning": {
+          "name": "cms/code-reasoning",
+       	  "tools": true
+        }
+      }
+    }
+  },
+  "model": "bitfrost/cms/code-reasoning"
+}

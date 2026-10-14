@@ -1,0 +1,10 @@
+{
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": ["*.js", "*.mjs", "*.cjs"],
+      "parser": "espree",
+      "parserOptions": { "ecmaVersion": 2022 }
+    }
+  ]
+}
